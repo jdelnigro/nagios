@@ -16,8 +16,8 @@
 
 # Variables
 PROG=$(basename $0)
-LOCATION="Winchester,VA"
-# LOCATION="McMurdo,Antarctica"
+# LOCATION="Winchester,VA"
+LOCATION="McMurdo,Antarctica"
 SNOW_VAL=0
 
 # nagios return values
@@ -37,6 +37,7 @@ Options:
 
   -l <location>   Set the location to check the weather
   -w              Set a warning if snowing
+  -t              Set a warning for thunderstorm
   -h              print help messege
 
 EOF
@@ -44,10 +45,11 @@ exit 0
 }
 
 # parse options
-while getopts "l:wh" OPT; do
+while getopts "l:wth" OPT; do
   case $OPT in
     l) LOCATION=${OPTARG} ;;
     w) SNOW_VAL=1 ;;
+    t) THUNDER=1 ;;
     h) usage ;;
     \?) echo "ERROR: Invallid option"; usage ;; 
   esac
@@ -60,9 +62,16 @@ case ${CONNECTION_STATUS} in
   0)
     WEATHER=$(curl -sSf http://wttr.in/${LOCATION}?format="%c+(%C)+%t+%w+%h")
     echo "${LOCATION}: ${WEATHER} humidity"
-    grep -i 'snow' <<< ${WEATHER} >/dev/null && \
-      RETVAL=${SNOW_VAL} || \
+    if grep -i 'snow' <<< ${WEATHER} >/dev/null; then
+      RETVAL=${SNOW_VAL}
+    elif grep -iq 'Thunderstorm' <<< ${WEATHER}; then
+      RETVAL=${THUNDER}
+    elif grep -i 'Sorry, we are running out of queries' <<< ${WEATHER} >/dev/null; then 
+      echo "Web page unavailable"
+      RETVAL=${UNKNOWN}
+    else
       RETVAL=${GOOD}
+    fi
     ;;
   1|3|5|6)
     printf "Connection error.\n"
