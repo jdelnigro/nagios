@@ -16,7 +16,6 @@
 
 # Variables
 PROG=$(basename $0)
-# LOCATION="Winchester,VA"
 LOCATION="McMurdo,Antarctica"
 SNOW_VAL=0
 

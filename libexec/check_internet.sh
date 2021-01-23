@@ -34,7 +34,7 @@ if [[ $(which speedtest-cli) ]]; then
     PUB_IP=$(curl -4 icanhazip.com 2>/dev/null)
     STATUS='OK'
     EXIT_STATUS=${GOOD}
-    MESSAGE="Internet connection established. IP Address is ${PUB_IP}"
+    MESSAGE="Connection established. IP Address is ${PUB_IP}"
   else
     STATUS='CRITICAL'
     EXIT_STATUS=${CRITICAL}
