@@ -11,57 +11,41 @@
 #################################################
 
 
-# colors
-RED='\e[31m'
-LT_RED='\e[91m'
-ORANGE='\e[38;5;208m'
-YELLOW='\e[33m'
-LT_GREEN='\e[92m'
-GREEN='\e[32m'
-RESET='\e[0m'
+# Nagios Return codes
+# 0 => OK
+# 1 => WARNING
+# 2 => CRITICAL
+# 3 => UNKNOWN
 
-EXTERNAL_IP=8.8.8.8
-# EXTERNAL_IP=google.com
+# Variables
+PROG=$(basename $0)
 
-check_ping() {
-  GOOD_PING=0
-  for count in {1..5}; do
-    [[ $(ping -c1 ${EXTERNAL_IP}) ]] && ((GOOD_PING++))
-  done
-  return $(( 100 - $((${GOOD_PING} * 20))  ))
-}
+# nagios return values
+GOOD=0
+WARNING=1
+CRITICAL=2
+UNKNOWN=3
 
-PUB_IP=$(curl -4 icanhazip.com 2>/dev/null)
 
-check_ping
-RESULT=$?
+if [[ $(which speedtest-cli) ]]; then
+  timeout 5 speedtest-cli --list &> /dev/null
+  RESULT=$?
+  if [[ ${RESULT} -eq 0  ]]; then
+    PUB_IP=$(curl -4 icanhazip.com 2>/dev/null)
+    STATUS='OK'
+    EXIT_STATUS=${GOOD}
+    MESSAGE="Internet connection established. IP Address is ${PUB_IP}"
+  else
+    STATUS='CRITICAL'
+    EXIT_STATUS=${CRITICAL}
+    MESSAGE="No connection to internet"
+  fi
+else
+  STATUS='UNKNOWN'
+  EXIT_STATUS=${UNKNOWN}
+  MESSAGE="speedtest-cli is not installed"
+fi
 
-case $RESULT in
-  100) COLOR=$RED
-       STATUS='CRITICAL'
-       EXIT_STATUS=2
-       ;;
-  80) COLOR=$LT_RED
-      STATUS='CRITICAL'
-      EXIT_STATUS=2
-      ;;
-  60) COLOR=$ORANGE
-      STATUS='WARNING'
-      EXIT_STATUS=1
-      ;;
-  40) COLOR=$YELLOW
-      STATUS='WARNING'
-      EXIT_STATUS=1
-      ;;
-  20) COLOR=$LT_GREEN
-      STATUS='OK'
-      EXIT_STATUS=0
-      ;;
-  0) COLOR=$GREEN
-     STATUS='OK'
-     EXIT_STATUS=0;;
-esac
+printf "Internet ${STATUS} - ${MESSAGE}\n"
 
-# printf "Internet ${STATUS} - ${COLOR}${RESULT}${RESET}%% packet loss. IP Address is ${PUB_IP}\n"
-# Adjust the previous line to work in Nagios
-printf "Internet ${STATUS} - ${RESULT}%% packet loss. IP Address is ${PUB_IP}\n"
+exit ${EXIT_STATUS}
