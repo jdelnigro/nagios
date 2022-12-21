@@ -61,7 +61,7 @@ case ${CONNECTION_STATUS} in
   0)
     WEATHER=$(curl -sSf http://wttr.in/${LOCATION}?format="%c+(%C)+%t+%w+%h")
     echo "${LOCATION}: ${WEATHER} humidity"
-    if grep -i 'snow' <<< ${WEATHER} >/dev/null; then
+    if grep -i 'snow|Blizzard' <<< ${WEATHER} >/dev/null; then
       RETVAL=${SNOW_VAL}
     elif grep -iq 'Thunderstorm' <<< ${WEATHER}; then
       RETVAL=${THUNDER}
