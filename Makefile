@@ -21,9 +21,11 @@ rpm:
 	mkdir $($@_TMPDIR)/${RPM_NV}
 	cp -a * $($@_TMPDIR)/${RPM_NV}
 	tar cvfz ${RPM_SOURCE_DIR}/${RPM_NV}.tar.gz -C $($@_TMPDIR) ${RPM_NV}
+	mv ${RPM_SOURCE_DIR}/${RPM_NV}.tar.gz ${ROOTDIR}/rpmbuild/SOURCES/
 	#rpmbuild -ba --define "_sourcedir $($@_TMPDIR)/${RPM_NV}" ${SPECFILE}
 	rpmbuild -ba --define "_topdir ${ROOTDIR}/rpmbuild" $(rpm_defines) ${SPECFILE}
 	# rpmbuild -ba $(rpm_defines) ${SPECFILE}
+	rm -rf $($@_TMPDIR)
 
 setup:
 	mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
